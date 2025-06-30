@@ -1,0 +1,42 @@
+{
+  "name": "nextgen-web3-precision",
+  "version": "1.0.0",
+  "description": "NextGen precision calculation library with BigNumber.js v9 for high-precision financial calculations",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "build": "echo 'No build step required for CommonJS'",
+    "prepublishOnly": "npm test",
+    "lint": "echo 'Linting not configured yet'"
+  },
+  "keywords": [
+    "precision",
+    "bignumber",
+    "financial",
+    "calculations",
+    "wei",
+    "ethereum",
+    "defi",
+    "nextgen"
+  ],
+  "author": "codermaybe",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/codermaybe/nextgen-web3-precision.git"
+  },
+  "dependencies": {
+    "bignumber.js": "^9.1.2"
+  },
+  "devDependencies": {
+    "jest": "^30.0.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
