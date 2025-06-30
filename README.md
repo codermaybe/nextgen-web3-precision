@@ -1,6 +1,6 @@
 # nextgen-web3-precision
 
-NextGen高精度计算库，基于BigNumber.js v9的统一精度计算体系，专为DeFi金融计算设计。
+NextGen高精度计算库，基于BigNumber.js v9的统一精度计算体系，目前仅个人defi项目测试使用。
 
 ## 特性
 
