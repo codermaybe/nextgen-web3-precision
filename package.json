@@ -1,6 +1,6 @@
 {
   "name": "nextgen-web3-precision",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "NextGen precision calculation library with BigNumber.js v9 for high-precision financial calculations",
   "main": "index.js",
   "types": "index.d.ts",

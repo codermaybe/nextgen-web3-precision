@@ -114,12 +114,12 @@ function priceToSqrtPriceX96(price, decimals0 = 18, decimals1 = 18) {
     }
 
     // 调整小数位精度
-    const decimalAdjustment = new BigNumber(10).pow(decimals1 - decimals0);
+    const decimalAdjustment = new BigNumber(10).pow(decimals0 - decimals1);
     const adjustedPrice = priceBN.multipliedBy(decimalAdjustment);
 
     // 计算 sqrt(price) * 2^96
-    const sqrtPrice = adjustedPrice.sqrt();
-    const sqrtPriceX96 = sqrtPrice.multipliedBy(Q96);
+    const sqrtPrice = Math.sqrt(adjustedPrice.toNumber()); // convert to JS number for sqrt
+    const sqrtPriceX96 = new BigNumber(sqrtPrice).multipliedBy(Q96);
 
     return sqrtPriceX96.toFixed(0);
   } catch (error) {
@@ -168,11 +168,13 @@ function tickToPrice(tick, decimals0 = 18, decimals1 = 18) {
       throw new Error(`Tick out of range: ${tick}`);
     }
 
-    // 计算价格：1.0001^tick
-    const price = TICK_BASE.pow(tick);
+    // 计算价格：1.0001^{-tick}  (T1 / T0)
+    const absTick = Math.abs(tick);
+    const basePow = TICK_BASE.pow(absTick);
+    const price = tick >= 0 ? new BigNumber(1).dividedBy(basePow) : basePow;
 
     // 调整小数位精度
-    const decimalAdjustment = new BigNumber(10).pow(decimals0 - decimals1);
+    const decimalAdjustment = new BigNumber(10).pow(decimals1 - decimals0);
     const adjustedPrice = price.multipliedBy(decimalAdjustment);
 
     return adjustedPrice;
@@ -199,21 +201,20 @@ function priceToTick(price, decimals0 = 18, decimals1 = 18) {
     const decimalAdjustment = new BigNumber(10).pow(decimals1 - decimals0);
     const adjustedPrice = priceBN.multipliedBy(decimalAdjustment);
 
-    // 计算tick：log(price) / log(1.0001)
-    // 由于BigNumber.js可能不支持ln()，使用Math.log()
+    // 计算tick：-log(price) / log(1.0001)
     const logPrice = Math.log(adjustedPrice.toNumber());
     const logBase = Math.log(TICK_BASE.toNumber());
-    const tick = new BigNumber(logPrice / logBase);
+    const tickRaw = -(logPrice / logBase);
 
     // 四舍五入到整数
-    const roundedTick = Math.round(tick.toNumber());
+    const roundedTick = Math.round(tickRaw);
 
     // 验证tick范围
     if (roundedTick < MIN_TICK || roundedTick > MAX_TICK) {
       throw new Error(`Calculated tick out of range: ${roundedTick}`);
     }
 
-    return roundedTick;
+    return Object.is(roundedTick, -0) ? 0 : roundedTick;
   } catch (error) {
     throw new Error(`priceToTick conversion failed: ${error.message}`);
   }
