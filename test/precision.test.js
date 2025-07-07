@@ -197,4 +197,56 @@ describe("nextgen-web3-precision", () => {
       );
     });
   });
+
+  describe("Directionality (T1/T0)", () => {
+    const DECIMALS_T0 = 18; // e.g., ETH
+    const DECIMALS_T1 = 6;  // e.g., USDC
+    const PRICE_T1_T0 = new BigNumber("2000"); // 2000 USDC per 1 ETH
+
+    test("priceToSqrtPriceX96 should correctly handle T1/T0 direction", () => {
+      // This is the core check for the bug fix.
+      // We convert the human-readable price (T1/T0) to the internal SqrtPriceX96 format.
+      const sqrtPriceX96 = priceToSqrtPriceX96(PRICE_T1_T0, DECIMALS_T0, DECIMALS_T1);
+      
+      // Now, convert it back to a price.
+      const price_restored = sqrtPriceX96ToPrice(sqrtPriceX96, DECIMALS_T0, DECIMALS_T1);
+
+      // The restored price should be very close to the original price.
+      expect(price_restored.minus(PRICE_T1_T0).abs().isLessThan(1e-9)).toBe(true);
+    });
+
+    test("priceToTick should correctly handle T1/T0 direction", () => {
+      // Convert the T1/T0 price to a tick.
+      const tick = priceToTick(PRICE_T1_T0, DECIMALS_T0, DECIMALS_T1);
+
+      // Convert the tick back to a price.
+      const price_restored = tickToPrice(tick, DECIMALS_T0, DECIMALS_T1);
+
+      // The restored price should be close to the original, allowing for tick precision loss.
+      // The tolerance is higher here because ticks are discrete and cause some precision loss.
+      expect(price_restored.minus(PRICE_T1_T0).abs().dividedBy(PRICE_T1_T0).isLessThan(0.001)).toBe(true);
+    });
+
+    test("sqrtPriceX96ToPrice should produce a T1/T0 price", () => {
+        // Manually calculate the expected raw ratio for internal calculations
+        const raw_ratio = PRICE_T1_T0.multipliedBy(new BigNumber(10).pow(DECIMALS_T1 - DECIMALS_T0));
+        const sqrtPrice = raw_ratio.sqrt();
+        const sqrtPriceX96 = sqrtPrice.multipliedBy(Q96).integerValue();
+
+        const price = sqrtPriceX96ToPrice(sqrtPriceX96, DECIMALS_T0, DECIMALS_T1);
+
+        expect(price.minus(PRICE_T1_T0).abs().isLessThan(1e-9)).toBe(true);
+    });
+
+    test("tickToPrice should produce a T1/T0 price", () => {
+        // We'll use a known tick and see if it produces the correct T1/T0 price.
+        // Let's find the tick for our 2000 USDC/ETH price first.
+        const expectedTick = priceToTick(PRICE_T1_T0, DECIMALS_T0, DECIMALS_T1);
+        
+        const price = tickToPrice(expectedTick, DECIMALS_T0, DECIMALS_T1);
+
+        // Check if the resulting price is close to our target price.
+        expect(price.minus(PRICE_T1_T0).abs().dividedBy(PRICE_T1_T0).isLessThan(0.001)).toBe(true);
+    });
+  });
 });

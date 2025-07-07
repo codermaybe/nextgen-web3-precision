@@ -13,6 +13,9 @@
 
 const BigNumber = require("bignumber.js");
 
+// 引入 BigNumber 数学扩展库，添加 log() 等方法
+require("./extensions/bignumberLIB.js");
+
 // 全局BigNumber配置
 BigNumber.config({
   DECIMAL_PLACES: 40, // 40位小数精度
@@ -113,13 +116,15 @@ function priceToSqrtPriceX96(price, decimals0 = 18, decimals1 = 18) {
       throw new Error(`Invalid price: ${price}`);
     }
 
-    // 调整小数位精度
-    const decimalAdjustment = new BigNumber(10).pow(decimals0 - decimals1);
+    // 调整小数位精度, 价格 P = y/x, 内部计算需要 P * 10^(d1-d0)
+    const decimalAdjustment = new BigNumber(10).pow(decimals1 - decimals0);
     const adjustedPrice = priceBN.multipliedBy(decimalAdjustment);
 
-    // 计算 sqrt(price) * 2^96
-    const sqrtPrice = Math.sqrt(adjustedPrice.toNumber()); // convert to JS number for sqrt
-    const sqrtPriceX96 = new BigNumber(sqrtPrice).multipliedBy(Q96);
+    // 使用 BigNumber.sqrt() 以保持高精度
+    const sqrtPrice = adjustedPrice.sqrt();
+    const sqrtPriceX96 = sqrtPrice
+      .multipliedBy(Q96)
+      .integerValue(BigNumber.ROUND_DOWN);
 
     return sqrtPriceX96.toFixed(0);
   } catch (error) {
@@ -168,13 +173,11 @@ function tickToPrice(tick, decimals0 = 18, decimals1 = 18) {
       throw new Error(`Tick out of range: ${tick}`);
     }
 
-    // 计算价格：1.0001^{-tick}  (T1 / T0)
-    const absTick = Math.abs(tick);
-    const basePow = TICK_BASE.pow(absTick);
-    const price = tick >= 0 ? new BigNumber(1).dividedBy(basePow) : basePow;
+    // 修正：计算价格应该是 1.0001^tick
+    const price = TICK_BASE.pow(tick);
 
     // 调整小数位精度
-    const decimalAdjustment = new BigNumber(10).pow(decimals1 - decimals0);
+    const decimalAdjustment = new BigNumber(10).pow(decimals0 - decimals1);
     const adjustedPrice = price.multipliedBy(decimalAdjustment);
 
     return adjustedPrice;
@@ -197,14 +200,16 @@ function priceToTick(price, decimals0 = 18, decimals1 = 18) {
       throw new Error(`Invalid price: ${price}`);
     }
 
-    // 调整小数位精度
+    // 调整小数位精度, 价格 P = y/x, 内部计算需要 P * 10^(d1-d0)
     const decimalAdjustment = new BigNumber(10).pow(decimals1 - decimals0);
-    const adjustedPrice = priceBN.multipliedBy(decimalAdjustment);
+    const adjustedPrice = new BigNumber(priceBN.multipliedBy(decimalAdjustment));
 
-    // 计算tick：-log(price) / log(1.0001)
-    const logPrice = Math.log(adjustedPrice.toNumber());
-    const logBase = Math.log(TICK_BASE.toNumber());
-    const tickRaw = -(logPrice / logBase);
+    // 修正：计算tick应该是 log(price) / log(1.0001)
+    // 使用 BigNumber 的 log() 方法保持高精度
+    const logPrice = adjustedPrice.log();
+    const logBase = TICK_BASE.log();
+    const tickRawBN = logPrice.dividedBy(logBase);
+    const tickRaw = parseFloat(tickRawBN.toString()); // 仅在最后转换为 Number 用于 Math.round
 
     // 四舍五入到整数
     const roundedTick = Math.round(tickRaw);

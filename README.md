@@ -1,6 +1,6 @@
 # nextgen-web3-precision
 
-NextGen 高精度计算库，基于 BigNumber.js v9 的统一精度计算体系，目前仅个人 defi 项目测试使用。
+NextGen 高精度计算库，基于 BigNumber.js v9 的统一精度计算体系，目前仅个人 defi 项目测试使用，请勿盲目用于生产。
 
 ## 特性
 
@@ -9,13 +9,32 @@ NextGen 高精度计算库，基于 BigNumber.js v9 的统一精度计算体系�
 - 📊 **价格转换**: Uniswap V3 兼容的价格/tick/sqrtPriceX96 转换
 - 🎨 **格式化输出**: 原生币(4 位有效数字)和 USD(8 位有效数字)格式化
 - 🔒 **类型安全**: 完整的 TypeScript 类型定义
-- ⚡ **零依赖**: 仅依赖 BigNumber.js，无其他外部依赖
+- 📐 **高级数学函数**: 集成 bignumberLIB.js 扩展，支持对数等高级运算
+
+## ⚠️ 重要安全提示
+
+此库包含第三方扩展 `bignumberLIB.js`（Dr. Ron Knott 版本），用于提供对数等高级数学函数。使用前请注意：
+
+1. **第三方依赖风险**: `extensions/bignumberLIB.js` 是外部开发的扩展库
+2. **生产环境谨慎**: 本库目前仅用于个人 DeFi 项目测试，请充分测试后再用于生产
+3. **精度验证**: 涉及资金计算时，请务必进行充分的精度验证
 
 ## 安装
 
 ```bash
 npm install nextgen-web3-precision
 ```
+
+## 1.1.0 更新
+
+- 解决类型混用问题，即使能通过精度也保持使用 bignumber 计算
+- 引入`bignumberLIB`库的实现（当前测试与 9.1.2 版本 bignumber 自用部分保持兼容）
+- `bignumberLIB`库文件细节均已写入**extensions\bignumberLIB.js**开头部分，请自行了解
+
+## 1.0.2 修正
+
+- `tickToPrice` + `priceToTick` 中错误的负号已经删除
+- 修复小问题
 
 ## 1.0.1 更新
 
@@ -191,7 +210,32 @@ MIT
 
 欢迎提交 Issue 和 Pull Request。
 
+## 依赖说明
+
+- **bignumber.js**: ^9.1.2 - 核心高精度计算库
+- **bignumberLIB.js**: 内置扩展 - 提供对数(log)、指数(exp)等高级数学函数
+  - 来源: Dr. Ron Knott, University of Surrey
+  - 官方链接: https://r-knott.surrey.ac.uk/BigNumberLIB/
+  - 许可: 学术使用许可（请查看原始文件头部注释）
+
 ## 更新日志
+
+### 1.1.0
+
+- **新增**: 集成 bignumberLIB.js 扩展库
+- **改进**: `priceToTick` 函数现在使用高精度 BigNumber 对数计算
+- **修复**: 解决了 BigNumber.js 9.x 版本缺少 ln() 方法的问题
+- **安全**: 添加了第三方依赖的风险提示
+
+### 1.0.2
+
+- 修复 `tickToPrice` 和 `priceToTick` 中的符号错误
+- 修复其他小问题
+
+### 1.0.1
+
+- 方向变更为 T1/T0，与 Uniswap V3 保持一致
+- 更新了价格和 tick 转换公式
 
 ### 1.0.0
 

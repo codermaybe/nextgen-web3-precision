@@ -5,6 +5,43 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 项目遵循 [语义化版本](https://semver.org/spec/v2.0.0.html) 规范。
 
+## [1.1.0] - 2025-07-08
+
+### 新增功能
+- 集成 bignumberLIB.js 扩展库，为 BigNumber.js 添加高级数学函数支持
+- 新增 `BigNumber.prototype.log()` 方法，支持自然对数和任意底数对数计算
+- 扩展库提供的其他数学函数：exp()、sin()、cos()、tan() 等
+
+### 改进
+- `priceToTick` 函数现在使用高精度 BigNumber 对数计算，替代原有的 Math.log()
+- 提升了 tick 转换的精度，避免了 JavaScript 浮点数的精度损失
+- 所有计算现在完全基于 BigNumber，保证了端到端的高精度
+
+### 修复
+- 解决了 BigNumber.js 9.x 版本缺少 ln() 方法的问题
+- 修复了在某些边界条件下的精度误差
+
+### 安全性
+- 添加了第三方依赖（bignumberLIB.js）的风险提示
+- 在 README 中增加了重要安全提示章节
+- 明确标注了扩展库的来源和许可信息
+
+### 技术变更
+- 在 index.js 中添加了 `require("./extensions/bignumberLIB.js")` 引入扩展
+- 更新了相关文档，说明了外部依赖的使用
+
+## [1.0.2] - 2025-07-03
+
+### 修复
+- 修复 `tickToPrice` 和 `priceToTick` 中的符号错误
+- 修复其他小问题
+
+## [1.0.1] - 2025-07-01
+
+### 改进
+- 方向变更为 T1/T0，与 Uniswap V3 保持一致
+- 更新了价格和 tick 转换公式
+
 ## [1.0.0] - 2025-06-30
 
 ### 新增功能
